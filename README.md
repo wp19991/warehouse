@@ -1,9 +1,11 @@
 # warehouse
 
 ## 创建model.py
+
 你是一个精通数据库设计的设计人员，下面的表结构来管理一个仓库，里面的产品、进货、销售和配货的相关信息。
 如果有不合理的地方请直接修改，帮我用python使用peewee库建立sqlite3数据库，如果英文有错误请帮我修改，写上注释，并且给每个表添加测试数据：
 
+```
 表：仓库（Warehouse）
 仓库ID（Warehouse ID）：主键，唯一标识仓库
 仓库名称（Warehouse Name）：仓库的名称
@@ -46,16 +48,20 @@
 产品ID（Product ID）：外键，关联到产品表中的产品ID
 出货价格（Selling Price）：该产品的出货价格
 配货数量（Allocation Quantity）：配货的产品数量
-
-
+```
 
 ## 根据上面的数据，帮我查询产品A剩余的库存
 
-
 ## 对接到fastapi
 
-下面使用python的pewee库编写的数据库代码，帮我对接到fastapi的不同接口上
+- 下面使用python的pewee库编写的数据库代码，帮我对接到fastapi的不同接口上
+
 ```python
+from peewee import *
+
+db = SqliteDatabase('warehouse.db')  # 创建一个名为"warehouse.db"的SQLite数据库
+
+
 # 仓库（Warehouse）表
 class Warehouse(Model):
     warehouse_id = AutoField(primary_key=True)  # 仓库ID，自增主键
@@ -134,3 +140,57 @@ class AllocationDetails(Model):
         database = db
 
 ```
+
+- 如果你遇到了与Pydantic模型转换相关的问题，你可以尝试手动创建对应的Pydantic模型，并使用该模型来表示响应数据。下面是一个示例，展示了如何手动创建Pydantic模型并在FastAPI中使用：
+
+```python
+from pydantic import BaseModel
+from peewee import *
+
+from fastapi import FastAPI
+app = FastAPI()
+
+db = SqliteDatabase('mydatabase.db')
+
+
+# 仓库（Warehouse）表
+class Warehouse(Model):
+    warehouse_id = AutoField(primary_key=True)
+    warehouse_name = CharField(unique=True)
+    warehouse_address = CharField()
+    warehouse_login_password = CharField()
+    admin_name = CharField()
+
+    class Meta:
+        database = db
+
+
+# 手动创建对应的Pydantic模型
+class WarehouseModel(BaseModel):
+    warehouse_id: int
+    warehouse_name: str
+    warehouse_address: str
+    warehouse_login_password: str
+    admin_name: str
+
+
+# 路由和处理函数中使用手动创建的Pydantic模型
+@app.get("/warehouses/{warehouse_id}")
+def get_warehouse(warehouse_id: int):
+    warehouse = Warehouse.get_or_none(warehouse_id=warehouse_id)
+    if warehouse:
+        warehouse_data = {
+            "warehouse_id": warehouse.warehouse_id,
+            "warehouse_name": warehouse.warehouse_name,
+            "warehouse_address": warehouse.warehouse_address,
+            "warehouse_login_password": warehouse.warehouse_login_password,
+            "admin_name": warehouse.admin_name
+        }
+        return WarehouseModel(**warehouse_data)
+    return {"error": "Warehouse not found"}
+```
+
+-
+在这个示例中，我们手动创建了一个名为WarehouseModel的Pydantic模型，并在get_warehouse处理函数中使用它来表示响应数据的类型。在处理函数中，我们从数据库中获取仓库对象，并将其转换为一个包含相应字段的字典。然后，我们使用这个字典来实例化WarehouseModel，并将其作为响应数据返回。
+- 请注意，你需要根据实际的数据字段进行适当的修改，以确保模型和数据字段之间的匹配。
+- 通过手动创建Pydantic模型，并根据数据库对象转换为相应的字典来实例化模型，应该能够解决你在使用Peewee和FastAPI时遇到的转换问题。
