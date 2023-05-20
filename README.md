@@ -2,7 +2,7 @@
 
 ## 创建model.py
 你是一个精通数据库设计的设计人员，下面的表结构来管理一个仓库，里面的产品、进货、销售和配货的相关信息。
-如果有不合理的地方青直接修改，帮我用python使用peewee库建立sqlite3数据库，如果英文有错误请帮我修改，写上注释，并且给每个表添加测试数据：
+如果有不合理的地方请直接修改，帮我用python使用peewee库建立sqlite3数据库，如果英文有错误请帮我修改，写上注释，并且给每个表添加测试数据：
 
 表：仓库（Warehouse）
 仓库ID（Warehouse ID）：主键，唯一标识仓库
@@ -50,3 +50,87 @@
 
 
 ## 根据上面的数据，帮我查询产品A剩余的库存
+
+
+## 对接到fastapi
+
+下面使用python的pewee库编写的数据库代码，帮我对接到fastapi的不同接口上
+```python
+# 仓库（Warehouse）表
+class Warehouse(Model):
+    warehouse_id = AutoField(primary_key=True)  # 仓库ID，自增主键
+    warehouse_name = CharField(unique=True)  # 仓库名称，唯一
+    warehouse_address = CharField()  # 仓库地址
+    warehouse_login_password = CharField()  # 仓库登录密码
+    admin_name = CharField()  # 管理员名称
+
+    class Meta:
+        database = db
+
+
+# 产品（Product）表
+class Product(Model):
+    product_id = AutoField(primary_key=True)  # 产品ID，自增主键
+    product_name = CharField()  # 产品名称
+    product_model = CharField()  # 产品型号
+
+    class Meta:
+        database = db
+
+
+# 进货（Purchase）表
+class Purchase(Model):
+    purchase_id = AutoField(primary_key=True)  # 进货ID，自增主键
+    purchase_date = DateField()  # 进货日期
+    shipping_cost = DecimalField()  # 货车支付的运费
+    shipping_car_no = CharField()  # 货车的车牌号
+
+    class Meta:
+        database = db
+
+
+# 进货详情（Purchase Details）表
+class PurchaseDetails(Model):
+    purchase_details_id = AutoField(primary_key=True)  # 进货详情ID，自增主键
+    purchase = ForeignKeyField(Purchase, backref='purchase_details')  # 外键，关联到进货表
+    product = ForeignKeyField(Product, backref='purchase_details')  # 外键，关联到产品表
+    purchase_quantity = IntegerField()  # 进货数量
+
+    class Meta:
+        database = db
+
+
+# 销售单位（Sales Unit）表
+class SalesUnit(Model):
+    sales_unit_id = AutoField(primary_key=True)  # 销售单位ID，自增主键
+    sales_unit_name = CharField(unique=True)  # 销售单位名称，唯一
+    location = CharField()  # 地点
+    phone = CharField()  # 电话
+
+    class Meta:
+        database = db
+
+
+# 配货（Allocation）表
+class Allocation(Model):
+    allocation_id = AutoField(primary_key=True)  # 配货ID，自增主键
+    sales_unit = ForeignKeyField(SalesUnit, backref='allocations')  # 外键，关联到销售单位表
+    shipment_date = DateField()  # 发货日期
+    delivery_location = CharField()  # 运输地点
+
+    class Meta:
+        database = db
+
+
+# 配货详情（Allocation Details）表
+class AllocationDetails(Model):
+    allocation_details_id = AutoField(primary_key=True)  # 配货详情ID，自增主键
+    allocation = ForeignKeyField(Allocation, backref='allocation_details')  # 外键，关联到配货表
+    product = ForeignKeyField(Product, backref='allocation_details')  # 外键，关联到产品表
+    selling_price = DecimalField()  # 出货价格
+    allocation_quantity = IntegerField()  # 配货数量
+
+    class Meta:
+        database = db
+
+```

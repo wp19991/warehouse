@@ -81,70 +81,72 @@ class AllocationDetails(Model):
         database = db
 
 
-# 创建所有表
-db.create_tables([Warehouse, Product, Purchase, PurchaseDetails, SalesUnit, Allocation, AllocationDetails])
+if __name__ == '__main__':
+    # 创建所有表
+    db.create_tables([Warehouse, Product, Purchase, PurchaseDetails, SalesUnit, Allocation, AllocationDetails])
 
-# 添加测试数据
-# 仓库数据
-warehouse_data = [
-    {'warehouse_name': '仓库A', 'warehouse_address': '地址A', 'warehouse_login_password': '密码A', 'admin_name': '管理员A'},
-    {'warehouse_name': '仓库B', 'warehouse_address': '地址B', 'warehouse_login_password': '密码B', 'admin_name': '管理员B'}
-]
-Warehouse.insert_many(warehouse_data).execute()
+    # 添加测试数据
+    # 仓库数据
+    warehouse_data = [
+        {'warehouse_name': '仓库A', 'warehouse_address': '地址A', 'warehouse_login_password': '密码A', 'admin_name': '管理员A'},
+        {'warehouse_name': '仓库B', 'warehouse_address': '地址B', 'warehouse_login_password': '密码B', 'admin_name': '管理员B'}
+    ]
+    Warehouse.insert_many(warehouse_data).execute()
 
-# 产品数据
-product_data = [
-    {'product_name': '产品A', 'product_model': '型号A'},
-    {'product_name': '产品B', 'product_model': '型号B'}
-]
-Product.insert_many(product_data).execute()
+    # 产品数据
+    product_data = [
+        {'product_name': '产品A', 'product_model': '型号A'},
+        {'product_name': '产品B', 'product_model': '型号B'}
+    ]
+    Product.insert_many(product_data).execute()
 
-# 进货数据
-purchase_data = [
-    {'purchase_date': '2023-05-18', 'shipping_cost': 100.00, 'shipping_car_no': '车牌号A'},
-    {'purchase_date': '2023-05-19', 'shipping_cost': 150.00, 'shipping_car_no': '车牌号B'}
-]
-Purchase.insert_many(purchase_data).execute()
+    # 进货数据
+    purchase_data = [
+        {'purchase_date': '2023-05-18', 'shipping_cost': 100.00, 'shipping_car_no': '车牌号A'},
+        {'purchase_date': '2023-05-19', 'shipping_cost': 150.00, 'shipping_car_no': '车牌号B'}
+    ]
+    Purchase.insert_many(purchase_data).execute()
 
-# 进货详情数据
-purchase_details_data = [
-    {'purchase': 1, 'product': 1, 'purchase_quantity': 10},
-    {'purchase': 1, 'product': 2, 'purchase_quantity': 5},
-    {'purchase': 2, 'product': 2, 'purchase_quantity': 8}
-]
-PurchaseDetails.insert_many(purchase_details_data).execute()
+    # 进货详情数据
+    purchase_details_data = [
+        {'purchase': 1, 'product': 1, 'purchase_quantity': 10},
+        {'purchase': 1, 'product': 2, 'purchase_quantity': 5},
+        {'purchase': 2, 'product': 2, 'purchase_quantity': 8}
+    ]
+    PurchaseDetails.insert_many(purchase_details_data).execute()
 
-# 销售单位数据
-sales_unit_data = [
-    {'sales_unit_name': '销售单位A', 'location': '地点A', 'phone': '电话A'},
-    {'sales_unit_name': '销售单位B', 'location': '地点B', 'phone': '电话B'}
-]
-SalesUnit.insert_many(sales_unit_data).execute()
+    # 销售单位数据
+    sales_unit_data = [
+        {'sales_unit_name': '销售单位A', 'location': '地点A', 'phone': '电话A'},
+        {'sales_unit_name': '销售单位B', 'location': '地点B', 'phone': '电话B'}
+    ]
+    SalesUnit.insert_many(sales_unit_data).execute()
 
-# 配货数据
-allocation_data = [
-    {'sales_unit': 1, 'shipment_date': '2023-05-19', 'delivery_location': '运输地点A'},
-    {'sales_unit': 2, 'shipment_date': '2023-05-20', 'delivery_location': '运输地点B'}
-]
-Allocation.insert_many(allocation_data).execute()
+    # 配货数据
+    allocation_data = [
+        {'sales_unit': 1, 'shipment_date': '2023-05-19', 'delivery_location': '运输地点A'},
+        {'sales_unit': 2, 'shipment_date': '2023-05-20', 'delivery_location': '运输地点B'}
+    ]
+    Allocation.insert_many(allocation_data).execute()
 
-# 配货详情数据
-allocation_details_data = [
-    {'allocation': 1, 'product': 1, 'selling_price': 200.00, 'allocation_quantity': 8},
-    {'allocation': 1, 'product': 2, 'selling_price': 250.00, 'allocation_quantity': 5},
-    {'allocation': 2, 'product': 2, 'selling_price': 300.00, 'allocation_quantity': 10}
-]
-AllocationDetails.insert_many(allocation_details_data).execute()
+    # 配货详情数据
+    allocation_details_data = [
+        {'allocation': 1, 'product': 1, 'selling_price': 200.00, 'allocation_quantity': 8},
+        {'allocation': 1, 'product': 2, 'selling_price': 250.00, 'allocation_quantity': 5},
+        {'allocation': 2, 'product': 2, 'selling_price': 300.00, 'allocation_quantity': 10}
+    ]
+    AllocationDetails.insert_many(allocation_details_data).execute()
 
+    # 查询产品A的剩余库存
+    product_a = Product.get(Product.product_name == '产品A')
+    total_purchase_quantity = PurchaseDetails.select(fn.SUM(PurchaseDetails.purchase_quantity)).where(
+        PurchaseDetails.product == product_a).scalar()
+    total_allocation_quantity = AllocationDetails.select(fn.SUM(AllocationDetails.allocation_quantity)).where(
+        AllocationDetails.product == product_a).scalar()
 
-# 查询产品A的剩余库存
-product_a = Product.get(Product.product_name == '产品A')
-total_purchase_quantity = PurchaseDetails.select(fn.SUM(PurchaseDetails.purchase_quantity)).where(PurchaseDetails.product == product_a).scalar()
-total_allocation_quantity = AllocationDetails.select(fn.SUM(AllocationDetails.allocation_quantity)).where(AllocationDetails.product == product_a).scalar()
+    remaining_stock = total_purchase_quantity - total_allocation_quantity
 
-remaining_stock = total_purchase_quantity - total_allocation_quantity
+    print(f"产品A的剩余库存为: {remaining_stock}")
 
-print(f"产品A的剩余库存为: {remaining_stock}")
-
-# 数据库连接关闭
-db.close()
+    # 数据库连接关闭
+    db.close()
