@@ -21,5 +21,8 @@ jobs:
     - name: Install dependencies
       run: pip install -r requirements.txt
 
+    - name: rm database
+      run: rm -rf warehouse.db
+
     - name: Run tests
       run: python model.py
